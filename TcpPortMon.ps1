@@ -50,10 +50,10 @@ Write-Host "Type: 'get-help .\scan.ps1 -detailed' for detailled information"
 Write-Host "Running as Admin?"
 If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
 
-    [Security.Principal.WindowsBuiltInRole] “Administrator”))
+    [Security.Principal.WindowsBuiltInRole] "Administrator"))
 
 {
-    Write-Warning “You do not have Administrator rights to run this script!`nPlease re-run this script as an Administrator!”
+    Write-Warning "You do not have Administrator rights to run this script!`nPlease re-run this script as an Administrator!"
     Write-Warning "If You are not certain about this script's origin, please contact Your local InfoSec Officer!"
     exit 1
 }else{
