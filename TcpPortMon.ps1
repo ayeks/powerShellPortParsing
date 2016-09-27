@@ -6,16 +6,14 @@
     Therefore it would be helpfull to execute a script which listens for that specific port and writes a logfile of it occurence in the netstat output.
     This script does exactly that!
 .DESCRIPTION
-    Currently the script is kept as simple as possible. In the future it should be modularized, configured via parameters and written following the Powershell standards. The user must have administrator rights for the execution (this should be the case if he is able to install software which opens some unknown ports..).
     Installation Steps:
-    1.Modify the portList in the TcpPortMon.ps1 file.
-    2.Create Directory C:\TcpPortMon.
-    3.Copy TcpPortMon.ps1 and TcpPortMon_TaskScheduler.xmlinto this directory.
-    4.Start the Windows TaskScheduler and import the XML file as new task.
-    5.Change the User of the task to your own user.
-    6.Hit OK twice and insert your passwort.
+    1. Copy TcpPortMon.ps1 and TcpPortMon_TaskScheduler.xml to a fixed location (e.g. C:/TcpPortMon)
+    2. Start the Windows TaskScheduler and import the XML file as new task.
+    3. Change the User of the task to your own user.
+    4. Change the Arguments of the triggered action to your ports. (Actions -> Modify -> Arguments)
+    5. Hit OK multiple times and insert your passwort.
 
-    Now the script should log something into the file C:\TcpPortMon\PortReport_YEAR-MONTH-DAY.txt on every minute.
+    Now the script should log something into the file C:\TcpPortMon\PortReport_YEAR-MONTH-DAY_username_hostname.txt on every minute.
 
 .PARAMETER outDir
     The path to the file (does not need to exist) where the results of a positive scan are stored.
@@ -23,17 +21,23 @@
 .PARAMETER p
     If You want to parse your open ports for a single port set this parameter.
     (Only possible to be set if range is not set.)
+    -p portNumber
+    e.g.: -p 10000
 .PARAMETER range
     If You want to parse for a range of ports, set this parameter in this syntax-style:
     -range pLower,pUpper
     e.g.: -range 10000,32000
     (Only possible to be set if port is not set.)
 .EXAMPLE
-    .\scan.ps1 -range 20,250
-    <Scans for given 231 Ports wether they are listed in output of netstat.exe or not.>
+    .\TcpPortMon.ps1 -p 443
+    <Scans for given 443 Ports wether it is listed in output of netstat.exe or not and writes to current dir.>
+    .\TcpPortMon.ps1 -range 20,250
+    <Scans for given 231 Ports wether they are listed in output of netstat.exe or not and writes to current dir.>
+    .\TcpPortMon.ps1 -p 443 -outDir "C:\TcpPortMon"
+    <Scans for given 443 Ports wether it is listed in output of netstat.exe or not and writes to C:\TcpPortMon.>
 .NOTES
     Author: Lars Richter
-    Date:   September 23, 2016    
+    Date:   September 27, 2016    
 #>
 
 param(
@@ -79,7 +83,7 @@ $info = new-object system.text.stringbuilder
 $currentTime = get-date -uformat '%Y-%m-%dT%H:%M:%S'
 $currentDate = get-date -uformat '%Y-%m-%d'
 # Create file and write info
-$outFile = $outDir + "PortReport_" + $currentTime.Replace(":","_") +"_"+ $userName + "_" + $machineName + ".txt"
+$outFile = $outDir + "PortReport_" + $currentDate.Replace(":","_") +"_"+ $userName + "_" + $machineName + ".txt"
 # Create directory if it doesn’t exist and setup file for output
 if((Test-Path $outDir) -eq $FALSE)
     {
@@ -115,7 +119,7 @@ if ($p){
     #some "make the output-lines cleaner"-stuff to do...
     #Keep only the line with the data (remove the first lines with header data of netstat output)
     $data = $data[4..$data.count]
-    $switch = false
+    $switch = $false
     #parse through every entry (line) of netstat output
     for($i = 0; $i -lt $data.Length; $i++){
         #Write-Host $i + ". " + $data[$i];
@@ -155,7 +159,7 @@ if($dataWritten){
     "The script has found processes matching the given ports by the user."
     "Data has been written to file: " + $outFile
     "Appending additional user data to file..."
-    ("Machine: " + $machineName +"`nUsername: " + $userName + "`nUser Domain Name: " + $userDomainName + "`nScanned Port-No's: " + $range + " [" + $rangeTranslated.Length + " port(s)]")  | Out-File $outFile -Append -NoClobber
+    ("Time: " + $currentTime + " Machine: " + $machineName +" Username: " + $userName + " User Domain Name: " + $userDomainName + " Scanned Port-No's: " + $range + " [" + $rangeTranslated.Length + " port(s)]")  | Out-File $outFile -Append -NoClobber
 }else{
     "Nothing matched to the given arguments.`nNothing stored."
 }
